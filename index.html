@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Amazon Review ML Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+</head>
+
+<body>
+
+<!-- sidebar -->
+
+<div class="sidebar">
+    <div class="logo">ReviewScope</div>
+
+    <div class="sidebar-menu">
+        <a href="#overview" class="menu-item">
+            <i class="fa-solid fa-gauge"></i>
+            <span>Overview</span>
+        </a>
+        <a href="#preprocessing" class="menu-item">
+            <i class="fa-solid fa-users"></i>
+            <span>Preprocessing</span>
+        </a>
+        <a href="#eda" class="menu-item">
+            <i class="fa-solid fa-diagram-project"></i>
+            <span>EDA</span>
+        </a>
+        <a href="#machinelearning" class="menu-item">
+            <i class="fa-solid fa-diagram-project"></i>
+            <span>Machine Learning</span>
+        </a>
+        <a href="#conclusion" class="menu-item">
+            <i class="fa-solid fa-gear"></i>
+            <span>Conclusion</span>
+        </a>
+    </div>
+</div>
+
+
+<!-- HERO + QUICK STATS -->
+<section class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+        <div class="section-header">
+        <h2 class="section-title">
+            Amazon Reviews: Predicting Ratings
+        </h2>
+            <p class="section-subtext">
+                This project analyzes <strong>Amazon U.S. customer reviews</strong> to predict review
+                scores (<strong>star_rating</strong>) using <strong>PySpark</strong> for scalable
+                data processing and machine learning. Due to the scale of the dataset, distributed computing techniques were
+                required to efficiently process and analyze the data. The objective is
+                to predict review ratings from textual and metadata features, enabling
+                practical applications such as automated sentiment analysis and product
+                quality monitoring. 
+            </p>
+    </div>
+
+        <div class="hero-buttons">
+            <a href="#overview" class="btn-primary">Explore Project</a>
+            <a href="https://github.com/BGUO2025/DSC-232R-Final-Project" class="btn-secondary">View Github</a>
+        </div>
+    </div>
+
+    <div class="quick-stats">
+        <div class="stat">
+            <h2>102.9M</h2>
+            <p>Reviews Processed</p>
+        </div>
+
+        <div class="stat">
+            <h2>117GB</h2>
+            <p>Data</p>
+        </div>
+    
+    </div>
+</section>
+
+<div class="container">
+
+<!-- MAIN CONTENT -->
+<div class="main">
+    
+<!-- OVERVIEW -->
+
+<section id="overview">
+    <h2> Overview </h2>
+        <!-- Cards -->
+    <div class="cards">
+        <div class="card">
+            <h2>
+                <a href="https://www.kaggle.com/datasets/cynthiarempel/amazon-us-customer-reviews-dataset" 
+                    target="_blank">
+                    Kaggle
+                </a>
+            </h2>
+
+            <p>Source</p>
+        </div>
+
+        <div class="card">
+            <h2>PySpark</h2>
+            <p>Data Processing & Modeling</p>
+        </div>
+
+        <div class="card">
+            <h2>60%</h2>
+            <p>5★ Reviews</p>
+        </div>
+
+        <div class="card">
+            <h2>4</h2>
+            <p>Total Models</p>
+        </div>
+
+        <div class="card">
+            <h2>Random Forest</h2>
+            <p>Top Performing Model</p>
+        </div>
+
+    </div>
+
+  <div class="two-column-wrapper">
+    
+    <div class="chart-wrapper">
+      <div class="panel">
+        <h2 class="section-title2">Star Rating Distribution</h2>
+        <canvas id="ratingChart"></canvas>
+      </div>
+    </div>
+
+    <div class="text-wrapper">
+      <h2 class="text-title">Insights</h2>
+      <p>
+        The distribution of our target variable, star_rating, is highly skewed, with the majority of reviews 
+        concentrated in the 4- and 5-star range as lower ratings are relatively underrpresented. This imbalance 
+        highlights the need for resampling strategies, class weighting, and proper feature selection. 
+      </p>
+
+      <h2 class="text-title">Challenges</h2>
+      <p>
+        Other computational and analytical challenges beyond the highly skewed ratings involve storage and processing
+        demands, limited data processing resources, and appropriately handling a dataset that includes high-dimensional 
+        text and sparsely populated categories. These characteristics require appropriate feature engineering, data balancing, and 
+        algorithm selection to achieve accurate predictions. 
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- PREPROCESSING -->
+<section id="preprocessing">
+
+    <h2>Data Preprocessing</h2>
+
+    <div class="preprocessing-wrapper">
+
+        <!-- LEFT SIDE (3 PANELS) -->
+        <div class="left-column">
+
+    <!-- Panel 1: Missing Values -->
+    <div class="panel">
+        <h3>Missing Values</h3>
+        <p>
+            Reviews missing <code>review_body</code> were excluded, as they provide no textual signal for predicting ratings.
+            Only reviews from the <strong>U.S. marketplace</strong> were retained to maintain English-language consistency.
+            Missing values are extremely rare (<0.02%), so simple deletion or deterministic imputation is sufficient.
+        </p>
+    </div>
+
+    <!-- Panel 2: Data Imbalance -->
+    <div class="panel">
+        <h3>Data Imbalance</h3>
+        <p>
+            Some product categories have different counts, and the target variable <code>star_rating</code> is skewed toward 4–5 stars.
+            We use <strong>Spark</strong> to reduce computation overhead. If imbalance affects modeling, class weighting or resampling techniques are applied.
+        </p>
+    </div>
+
+    <!-- Panel 3: Feature Transformations -->
+    <div class="panel">
+        <h3>Feature Transformations</h3>
+        <p>
+            <ul>
+                <li><strong>Helpfulness Ratio:</strong> <code>helpful_votes / total_votes</code> with safeguards for zero votes.</li>
+                <li><strong>Review Length:</strong> Numerical feature capturing the length of <code>review_body</code>.</li>
+                <li><strong>Product Category:</strong> One-hot encoded for modeling.</li>
+                <li>All features combined into a single vector for ML models.</li>
+            </ul>
+        </p>
+    </div>
+
+</div>
+
+        <!-- RIGHT SIDE (IMAGE / ANIMATION) -->
+        <lottie-player
+            src="../lottie/Test.json"
+            background="transparent"
+            speed="0.9"
+            loop
+            autoplay
+            class="lottie-animation">
+        </lottie-player>
+
+    </div>
+
+</section>
+
+<!-- EDA -->
+<section id="eda">
+  <h2> Exploratory Data Analysis </h2>
+
+  <div class="two-column-wrapper">
+
+    <!-- LEFT COLUMN: TWO CHARTS -->
+    <div class="eda-panel">
+        <h2 class="eda-section-title">Train/Test Errors</h2>
+        <canvas id="traintesterrors"></canvas>
+    </div>
+
+    <div class="eda-panel">
+        <h2 class="eda-section-title">RF Feature Importance</h2>
+        <canvas id="featureimportance"></canvas>
+    </div>
+
+    <div class="text-wrapper">
+        <h3>Train/Test Error Analysis</h3>
+      <p>
+
+        We evaluated the <strong>Random Forest classifier</strong> across different numbers of trees (1–49) to understand model complexity effects. 
+        Performance improves initially as trees increase but eventually plateaus. The small gap between training and validation curves suggests minimal overfitting. Overall, the model may be <strong>underfitting</strong>.
+      </p>
+
+      <h3>Feature Importance Analysis</h3>
+      <p>
+        Text-based features dominate prediction performance: <strong>review_word_counts</strong> and <strong>review_len</strong> are the most important. 
+        This shows that more detailed reviews provide stronger signals for star ratings. 
+        In contrast, <strong>verified_purchase_idx</strong> has negligible impact, meaning verified purchases do not strongly influence predictions.
+      </p>
+    </div>
+
+
+  </div>
+</section>
+
+<!-- MACHINE LEARNING -->
+<section id="machinelearning">
+    <h2>Machine Learning</h2>
+
+    <div class="ml-wrapper">
+        <div class="panel ml-panel">
+            <div class="ml-panel-content">
+                <div class="ml-panel-text">
+                    <h3>Model 1: Random Forest w/ Hyperparameter Tuning</h3>
+                    <ul>
+                        <li>Set A: 25 trees, depth 8 → Train: 60.98%, Validation: 60.83%</li>
+                        <li>Set B: 20 trees, depth 6 → Train: 60.85%, Validation: 60.70%</li>
+                        <li>Set C: 25 trees, depth 10 → Train: 61.19%, Validation: 61.03%</li>
+                    </ul>
+                    <p>
+                        Increasing tree depth improved performance slightly. The dataset’s class imbalance still causes bias toward higher ratings.
+                    </p>
+                </div>
+                <div class="ml-panel-image">
+                    <img src="../images/RMSE.png" alt="Random Forest Diagram">
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="panel ml-panel">
+            <div class="ml-panel-content">
+                <div class="ml-panel-text">
+            <h3>Model 2: Random Forest w/ PCA + K-Means Clustering</h3>
+
+            <h4>RF with Standard Features</h4>
+            <p>
+                The left-side matrix shows a strong bias toward predicting 5-star ratings, with a large concentration of predictions in the final column. 
+                While the model correctly classifies many true 5-star reviews, it frequently misclassifies ratings 1–4 as 5, 
+                particularly for classes 3 and 4 where the majority of predictions are pushed upward. In other words, this pattern indicates that the model
+                is heavily influenced by class imbalance as it captures high-rating behavior well, but performs poorly on lower ratings; this suggests limited 
+                ability to learn meaningful distinctions across the full rating spectrum.
+            </p>
+
+            <h4>RF with PCA Features</h4>
+            <p>
+                Using PCA-transformed features shows a complete collapse in predictive performance, with the model predicting only 5-star ratings for every 
+                instance. All observations, regardless of their true rating, are classified as 5, resulting in zero correct predictions for classes 1–4 and 
+                only correct predictions for true 5-star ratings.
+            </p>
+        </div>
+                <div class="ml-panel-image">
+                    <img src="../images/ConfusionMatrix.png" alt="Logistic Regression Diagram">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONCLUSION -->
+<section id="conclusion">
+    <h2>Conclusion</h2>
+
+    <div class="panel">
+        <table style="width:100%; border-collapse: collapse; margin-top:20px; color:#c5c9d0;">
+            <thead>
+                <tr style="background-color:#1f3865; color:white;">
+                    <th style="padding:10px; border:1px solid #444;">Category</th>
+                    <th style="padding:10px; border:1px solid #444;">Observation</th>
+                    <th style="padding:10px; border:1px solid #444;">Impact / Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color:#2c4a8c;">
+                    <td style="padding:10px; border:1px solid #444;">True Positives</td>
+                    <td style="padding:10px; border:1px solid #444;">Correctly predicted 5-star reviews</td>
+                    <td style="padding:10px; border:1px solid #444;">High-rating reviews are well captured; model reflects common patterns.</td>
+                </tr>
+                <tr style="background-color:#345aa3;">
+                    <td style="padding:10px; border:1px solid #444;">True Negatives</td>
+                    <td style="padding:10px; border:1px solid #444;">Correctly predicted low ratings (1–3)</td>
+                    <td style="padding:10px; border:1px solid #444;">Limited coverage; lower ratings are harder to predict accurately.</td>
+                </tr>
+                <tr style="background-color:#2c4a8c;">
+                    <td style="padding:10px; border:1px solid #444;">False Positives</td>
+                    <td style="padding:10px; border:1px solid #444;">Predicted high rating (5) but actual was lower</td>
+                    <td style="padding:10px; border:1px solid #444;">Bias toward 5-star ratings due to class imbalance; affects precision for lower ratings.</td>
+                </tr>
+                <tr style="background-color:#345aa3;">
+                    <td style="padding:10px; border:1px solid #444;">False Negatives</td>
+                    <td style="padding:10px; border:1px solid #444;">Predicted lower rating but actual was 5</td>
+                    <td style="padding:10px; border:1px solid #444;">Rare, but indicates the model sometimes underestimates highly positive reviews.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p style="margin-top:20px; line-height:1.6;">
+            <strong>Precision vs. Recall:</strong> The model exemplifies a high recall for 5-star ratings, successfully identifying the majority of highly positive reviews. 
+            However, at the expense at reduced precision for lower-rated classes, the model also frequently misclassifies ratings 1 through 4 due to class imbalance.
+            From a predictive performance perspective, this trade-off indicates that the model prioritizes sensitivity to the dominant class over the accurate differentiation 
+            of less frequent rating levels. Consequently, while the model is effective at capturing positive sentiment, its predictive reliability for intermediate or negative 
+            ratings is limited. Future work could mitigate this skew through techniques such as class weighting, resampling, or incorporating additional discriminative features to 
+            enhance the balance between precision and recall across all rating categories.
+        </p>
+    </div>
+</section>
+
+</div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
